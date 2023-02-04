@@ -3,7 +3,7 @@ const validator = require('validator');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user')
-const Post = require('../models/post')
+const Post = require('../models/post');
 
 
 module.exports = {
@@ -107,6 +107,36 @@ module.exports = {
             _id: createdPost._id.toString(),
             updatedAt: createdPost.updatedAt.toISOString(),
             createdAt: createdPost.createdAt.toISOString()
+        }
+    },
+
+    getPosts: async function ({ page }, req) {
+        if (!req.isAuth) {
+            const err = new Error('Not Authenticated');
+            err.code = 401
+            err.data = "User is not logged-in"
+            throw err;
+        }
+        const currentPage = page || 1;
+        const posts_per_page = 2;
+        let totalItems;
+        // const userId = mongoose.Types.ObjectId(req.userId)
+        totalItems = await Post.find().countDocuments()
+        const posts = await Post.find()
+            .skip((currentPage - 1) * posts_per_page)
+            .limit(posts_per_page)
+            .sort({ createdAt: -1 })
+            .populate('creator')
+        return {
+            posts: posts.map(post => {
+                return {
+                    ...post._doc,
+                    _id: post._id.toString(),
+                    createdAt: post.createdAt.toISOString(),
+                    updatedAt: post.updatedAt.toISOString()
+                }
+            }),
+            totalItems: totalItems
         }
     }
 }
