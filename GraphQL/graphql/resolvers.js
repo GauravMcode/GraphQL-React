@@ -138,5 +138,16 @@ module.exports = {
             }),
             totalItems: totalItems
         }
+    },
+
+    getPost: async function ({ postId }, req) {
+        const post = await Post.findById(postId).populate('creator');
+        if (!post) {
+            const err = new Error('Post not found')
+            err.code = 422
+            err.data = 'Post doesn\'t exists'
+            throw err;
+        }
+        return { ...post._doc, _id: post._id.toString(), createdAt: post.createdAt.toISOString(), updatedAt: post.updatedAt.toISOString() }
     }
 }

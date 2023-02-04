@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -36,7 +37,6 @@ const fileFilter = (req, file, cb) => {
 app.use(bodyParser.json());//parses req with content-type: application/json
 app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single('image'));
 
-app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'images')))
 
@@ -50,6 +50,21 @@ app.use((req, res, next) => {
         return res.sendStatus(200);
     }
     next();
+})
+
+app.use(auth);
+
+app.put('/put-image', (req, res, next) => {  //using REST-API to  store image in the images folder
+    if (!req.isAuth) {
+        throw new Error('Not Authenticated');
+    }
+    if (!req.file) {
+        return res.status(200).json({ message: 'No file provided' })
+    }
+    if (req.file.oldPath) {
+        clearImage(req.body.oldPath);
+    }
+    return res.status(201).json({ message: 'file stored', filePath: req.file.filename })
 })
 
 app.use('/graphql', graphqlHTTP({
@@ -79,3 +94,9 @@ mongoose.connect(MONGODB_URI)
         const server = app.listen(8080);
     })
     .catch(err => console.log(err))
+
+
+clearImage = imagePath => {
+    const filePath = path.join(__dirname, '..', 'images', imagePath);
+    fs.unlink(filePath, err => console.log(err));
+}
