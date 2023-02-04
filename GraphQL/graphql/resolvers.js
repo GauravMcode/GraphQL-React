@@ -240,8 +240,34 @@ module.exports = {
         await user.posts.pull(postId)
         await user.save()
         return { message: "Deleted Post Succesfully" }
+    },
+
+    getStatus: async function (args, req) {
+        const user = await User.findById(req.userId);
+        if (!user) {
+            const err = new Error('User not found')
+            err.code = 404
+            err.data = 'User doesn\'t exists'
+            throw err;
+        }
+        return user.status;
+    },
+
+    updateStatus: async function ({ status }, req) {
+        console.log(status);
+        const user = await User.findById(req.userId);
+        if (!user) {
+            const err = new Error('User not found')
+            err.code = 404
+            err.data = 'User doesn\'t exists'
+            throw err;
+        }
+        user.status = status;
+        const updatedUser = await user.save();
+        return updatedUser.status;
     }
 }
+
 
 clearImage = imagePath => {
     const filePath = path.join(__dirname, '..', 'images', imagePath);
