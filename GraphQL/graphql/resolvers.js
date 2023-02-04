@@ -3,6 +3,8 @@ const validator = require('validator');
 const jwt = require('jsonwebtoken');
 
 const User = require('../models/user')
+const Post = require('../models/post')
+
 
 module.exports = {
     createUser: async function ({ userInput }, req) {
@@ -61,5 +63,50 @@ module.exports = {
         }
         const token = jwt.sign({ email: email, userId: user._id.toString() }, 'somesupersecretkey', { expiresIn: '1h' });
         return { token: token, userId: user._id.toString() }
+    },
+
+    createPost: async function ({ postInput }, req) {
+        if (!req.isAuth) {
+            const err = new Error('Not Authenticated');
+            err.code = 401
+            err.data = "User is not logged-in"
+            throw err;
+        }
+        const title = postInput.title;
+        const imageUrl = postInput.imageUrl;
+        const content = postInput.content;
+
+        //validation check
+        const errors = [];
+        if (!validator.isLength(title, { min: 5 })) {
+            errors.push({ message: 'title is not valid' })
+        }
+        if (!validator.isLength(content, { min: 5 })) {
+            errors.push({ message: 'content is not valid' })
+        }
+        if (errors.length > 0) {
+            const err = new Error('input invalid')
+            err.code = 422
+            err.data = errors[0].message
+            throw err;
+        }
+
+        const user = await User.findById(req.userId);
+        if (!user) {
+            const err = new Error('User not found')
+            err.code = 422
+            err.data = 'user doesn\'t exists'
+            throw err;
+        }
+        const post = new Post({ title: title, imageUrl: imageUrl, content: content, creator: user });
+        const createdPost = await post.save();
+        await user.posts.push(createdPost);
+        await user.save();
+        return {
+            ...createdPost._doc,
+            _id: createdPost._id.toString(),
+            updatedAt: createdPost.updatedAt.toISOString(),
+            createdAt: createdPost.createdAt.toISOString()
+        }
     }
 }

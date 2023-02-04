@@ -8,6 +8,7 @@ const { graphqlHTTP } = require('express-graphql');  //Create a GraphQL HTTP ser
 
 const graphqlSchema = require('./graphql/schema')
 const graphqlResolver = require('./graphql/resolvers')
+const auth = require('./middleware/auth');
 
 const app = express();
 
@@ -34,6 +35,8 @@ const fileFilter = (req, file, cb) => {
 // app.use(bodyParser.urlencoded()); // parses req with content-type: x-ww-form-urlencoded
 app.use(bodyParser.json());//parses req with content-type: application/json
 app.use(multer({ storage: fileStorage, fileFilter: fileFilter }).single('image'));
+
+app.use(auth);
 
 app.use(express.static(path.join(__dirname, 'images')))
 
