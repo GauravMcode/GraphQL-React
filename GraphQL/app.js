@@ -62,6 +62,7 @@ app.put('/put-image', (req, res, next) => {  //using REST-API to  store image in
         return res.status(200).json({ message: 'No file provided' })
     }
     if (req.file.oldPath) {
+        console.log('deleting old image...');
         clearImage(req.body.oldPath);
     }
     return res.status(201).json({ message: 'file stored', filePath: req.file.filename })
@@ -97,6 +98,6 @@ mongoose.connect(MONGODB_URI)
 
 
 clearImage = imagePath => {
-    const filePath = path.join(__dirname, '..', 'images', imagePath);
+    const filePath = path.join(__dirname, 'images', imagePath);
     fs.unlink(filePath, err => console.log(err));
 }

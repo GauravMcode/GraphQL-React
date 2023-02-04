@@ -30,6 +30,10 @@ module.exports = buildSchema(`
         totalItems : Int!
     }
 
+    type DeleteData {
+        message : String!
+    }
+
     input UserInputData {
         name : String!
         email : String!
@@ -45,6 +49,8 @@ module.exports = buildSchema(`
     type RootMutation {
         createUser(userInput : UserInputData) : User!
         createPost(postInput : PostInputData) : Post!
+        updatePost(postId : ID, postInput : PostInputData) : Post!
+        deletePost(postId : ID) : DeleteData!
     }
 
     type RootQuery {
